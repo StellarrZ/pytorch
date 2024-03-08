@@ -2481,14 +2481,26 @@ def is_torch_function_object(value):
     return hasattr(value, "__torch_function__")
 
 
-def has_torch_function(vt: "torch._dynamo.variables.base.VariableTracker") -> bool:
+def has_torch_function(
+    vt: "torch._dynamo.variables.base.VariableTracker",
+    tx: "torch._dynamo.symbolic_convert.InstructionTranslatorBase",
+) -> bool:
     from torch._dynamo.variables import UserDefinedObjectVariable
     from torch._dynamo.variables.torch_function import TensorWithTFOverrideVariable
 
-    return isinstance(vt, TensorWithTFOverrideVariable) or (
-        isinstance(vt, UserDefinedObjectVariable)
-        and hasattr(vt.value, "__torch_function__")
-    )
+    # [Debug Log] To see what can happen with einsum
+    print("has_torch_function", type(vt), vt.has_unpack_var_sequence(tx), vt, sep="\t")
+    if vt.has_unpack_var_sequence(tx):
+        print("  len(vt.unpack_var_sequence(tx) :=", len(vt.unpack_var_sequence(tx)))
+    return False
+
+    if vt.has_unpack_var_sequence(tx):
+        return any(has_torch_function(v, tx) for v in vt.unpack_var_sequence(tx))
+    else:
+        return isinstance(vt, TensorWithTFOverrideVariable) or (
+            isinstance(vt, UserDefinedObjectVariable)
+            and hasattr(vt.value, "__torch_function__")
+        )
 
 
 # see note [Tensor Fakification and Symbol Caching]

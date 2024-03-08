@@ -446,19 +446,20 @@ class UserDefinedObjectVariable(UserDefinedVariable):
             return self.value
         return super().guard_as_python_constant()
 
-    def torch_function_check(self):
+    def torch_function_check(self, tx):
         assert has_torch_function(
-            self
+            self,
+            tx,
         ), f"calling torch function on object without __torch_function__ {self}"
 
     def get_torch_fn(self, tx):
-        self.torch_function_check()
+        self.torch_function_check(tx)
         from .torch_function import build_torch_function_fn
 
         return build_torch_function_fn(tx, self.value, self.source)
 
     def call_torch_function(self, tx, fn, types, args, kwargs):
-        self.torch_function_check()
+        self.torch_function_check(tx)
 
         from .torch_function import _get_subclass_type_var, call_torch_function
 

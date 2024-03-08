@@ -109,7 +109,7 @@ def build_torch_function_fn(tx, value, source):
 def can_dispatch_torch_function(tx, args, kwargs):
     if tx.output.torch_function_enabled:
         all_args = pytree.arg_tree_leaves(*args, **kwargs)
-        return any(has_torch_function(arg) for arg in all_args)
+        return any(has_torch_function(arg, tx) for arg in all_args)
     else:
         return False
 
@@ -119,7 +119,7 @@ def dispatch_torch_function(tx, fn, args, kwargs):
 
     all_args = pytree.arg_tree_leaves(*args, **kwargs)
     overloaded_args = _get_overloaded_args(
-        [arg for arg in all_args if has_torch_function(arg)],
+        [arg for arg in all_args if has_torch_function(arg, tx)],
         _get_subclass_type,
     )
 
